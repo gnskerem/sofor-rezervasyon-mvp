@@ -7,55 +7,54 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
- * Şoför atama mantığının tamamı bu serviste.
- *
- * Algoritma:
- *   1. Tüm müsait şoförleri getir
- *   2. Her şoför için score hesapla:
- *      score = distance * 0.5 - rating * 0.3
- *      (düşük score = daha iyi: yakın VE yüksek puanlı şoför kazanır)
- *   3. En düşük score'a sahip şoförü ata
+ * Turizm/VIP Transfer Odaklı Şoför Atama Servisi.
  */
 @Service
 public class DriverAssignmentService {
 
     private final DriverRepository driverRepository;
 
-    // Constructor injection — @Autowired yerine bu yöntem daha güvenli
     public DriverAssignmentService(DriverRepository driverRepository) {
         this.driverRepository = driverRepository;
     }
 
     /**
-     * Rezervasyon için en uygun şoförü bulur.
-     * Şoför bulunamazsa Optional.empty() döner.
+     * Rezervasyon için en uygun şoförü; yolcu sayısı, araç tipi ve mesafeye göre bulur.
      */
-    public Optional<Driver> assignDriver(Reservation reservation) {
-        // 1. Müsait şoförleri getir
-        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();
+    public Optional<Driver> assignDriver(Reservation reservation, Integer passengerCount, String preferredVehicle) {
+        // 1. Tüm müsait şoförleri getir
+        List<Driver> allAvailable = driverRepository.findByAvailableTrue();
 
-        if (availableDrivers.isEmpty()) {
-            System.out.println("⚠ Müsait şoför bulunamadı!");
+        // 2. Turizm Odaklı Sert Filtreleme (Kapasite ve Araç Tipi)
+        List<Driver> suitableDrivers = allAvailable.stream()
+                .filter(d -> d.getCapacity() >= passengerCount) // Yolcu sayısı sığmalı
+                .filter(d -> d.getVehicleType().equalsIgnoreCase(preferredVehicle)) // İstenen segment olmalı
+                .collect(Collectors.toList());
+
+        if (suitableDrivers.isEmpty()) {
+            System.out.println("⚠ Kriterlere uygun (kapasite/araç tipi) müsait şoför bulunamadı!");
             return Optional.empty();
         }
 
         Driver bestDriver = null;
         double bestScore = Double.MAX_VALUE;
 
-        // 2. Her şoför için score hesapla
-        for (Driver driver : availableDrivers) {
-            double distance = calculateDistance(
+        // 3. Uygun şoförler arasında en iyi skoru hesapla
+        for (Driver driver : suitableDrivers) {
+            double distance = calculateHaversineDistance(
                     driver.getLatitude(), driver.getLongitude(),
                     reservation.getPickupLat(), reservation.getPickupLng()
             );
 
-            // score formülü: düşük mesafe ve yüksek rating → düşük score → daha iyi
-            double score = distance * 0.5 - driver.getRating() * 0.3;
+            // VIP Servis Puanı: Mesafe önemli ama yüksek rating (şoför kalitesi) turizmde çok kritiktir.
+            // Formül: Mesafe ağırlığı 0.7, Puan ağırlığı 0.3
+            double score = (distance * 0.7) - (driver.getRating() * 0.3);
 
-            System.out.printf("Şoför: %-15s | Mesafe: %.4f | Rating: %.1f | Score: %.4f%n",
-                    driver.getName(), distance, driver.getRating(), score);
+            System.out.printf("Filtre Uygun: %-12s | Araç: %-8s | Mesafe: %.2f km | Score: %.4f%n",
+                    driver.getName(), driver.getVehicleType(), distance, score);
 
             if (score < bestScore) {
                 bestScore = score;
@@ -63,18 +62,20 @@ public class DriverAssignmentService {
             }
         }
 
-        System.out.println("✓ Seçilen şoför: " + (bestDriver != null ? bestDriver.getName() : "YOK"));
         return Optional.ofNullable(bestDriver);
     }
 
     /**
-     * Basit Euclidean distance hesabı.
-     * Gerçek projede Haversine formülü kullanılmalı,
-     * MVP için bu yeterli.
+     * Haversine Formülü: Dünya üzerindeki iki koordinat arasındaki gerçek KM mesafesini hesaplar.
      */
-    private double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
-        double dLat = lat1 - lat2;
-        double dLng = lng1 - lng2;
-        return Math.sqrt(dLat * dLat + dLng * dLng);
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Dünya yarıçapı (KM)
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 }

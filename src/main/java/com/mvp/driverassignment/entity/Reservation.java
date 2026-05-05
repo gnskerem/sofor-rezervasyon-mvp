@@ -1,14 +1,15 @@
 package com.mvp.driverassignment.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
-/**
- * Rezervasyon entity'si.
- * Acente tarafından oluşturulur, sistem şoför atar.
- */
 @Entity
 @Table(name = "reservation")
 public class Reservation {
+
+    public enum ReservationStatus {
+        PENDING, ASSIGNED, COMPLETED, CANCELLED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,87 +21,58 @@ public class Reservation {
 
     private Double pickupLng;
 
-    /**
-     * Rezervasyon durumu:
-     * PENDING   → Şoför henüz atanmadı
-     * ASSIGNED  → Şoför atandı, kabul bekleniyor
-     * COMPLETED → Şoför kabul etti, görev aktif
-     */
+    // --- Turizm İçin Eklenen Alanlar ---
+    private Integer passengerCount;
+    private String preferredVehicle;
+
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    // Atanan şoförün ID'si (null ise henüz atanmadı)
     private Long assignedDriverId;
 
-    // ===================== Enum =====================
-
-    public enum ReservationStatus {
-        PENDING, ASSIGNED, COMPLETED
-    }
+    private LocalDateTime createdAt;
 
     // ===================== Constructors =====================
 
-    public Reservation() {}
+    public Reservation() {
+        this.createdAt = LocalDateTime.now();
+        this.status = ReservationStatus.PENDING;
+    }
 
-    public Reservation(String customerName, Double pickupLat, Double pickupLng) {
+    public Reservation(String customerName, Double pickupLat, Double pickupLng, Integer passengerCount, String preferredVehicle) {
+        this();
         this.customerName = customerName;
         this.pickupLat = pickupLat;
         this.pickupLng = pickupLng;
-        this.status = ReservationStatus.PENDING;
+        this.passengerCount = passengerCount;
+        this.preferredVehicle = preferredVehicle;
     }
 
     // ===================== Getters & Setters =====================
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 
-    public String getCustomerName() {
-        return customerName;
-    }
+    public Double getPickupLat() { return pickupLat; }
+    public void setPickupLat(Double pickupLat) { this.pickupLat = pickupLat; }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
+    public Double getPickupLng() { return pickupLng; }
+    public void setPickupLng(Double pickupLng) { this.pickupLng = pickupLng; }
 
-    public Double getPickupLat() {
-        return pickupLat;
-    }
+    public Integer getPassengerCount() { return passengerCount; }
+    public void setPassengerCount(Integer passengerCount) { this.passengerCount = passengerCount; }
 
-    public void setPickupLat(Double pickupLat) {
-        this.pickupLat = pickupLat;
-    }
+    public String getPreferredVehicle() { return preferredVehicle; }
+    public void setPreferredVehicle(String preferredVehicle) { this.preferredVehicle = preferredVehicle; }
 
-    public Double getPickupLng() {
-        return pickupLng;
-    }
+    public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
 
-    public void setPickupLng(Double pickupLng) {
-        this.pickupLng = pickupLng;
-    }
+    public Long getAssignedDriverId() { return assignedDriverId; }
+    public void setAssignedDriverId(Long assignedDriverId) { this.assignedDriverId = assignedDriverId; }
 
-    public ReservationStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ReservationStatus status) {
-        this.status = status;
-    }
-
-    public Long getAssignedDriverId() {
-        return assignedDriverId;
-    }
-
-    public void setAssignedDriverId(Long assignedDriverId) {
-        this.assignedDriverId = assignedDriverId;
-    }
-
-    @Override
-    public String toString() {
-        return "Reservation{id=" + id + ", customer='" + customerName + "', status=" + status + "}";
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }
