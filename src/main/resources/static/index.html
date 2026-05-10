@@ -26,7 +26,7 @@
 <div class="container-fluid py-4">
   <div class="row px-3 mb-4">
     <div class="col-12 d-flex justify-content-between align-items-center bg-primary text-white p-3 rounded-4 shadow">
-      <h2 class="mb-0 ms-2"> 🚐 VIP Transfer Kontrol Merkezi</h2>
+      <h2 class="mb-0 ms-2"> VIP Transfer Kontrol Merkezi</h2>
       <span class="badge bg-light text-primary p-2">Akıllı Rotalama Aktif</span>
     </div>
   </div>
@@ -136,7 +136,7 @@
 
             data.forEach(d => {
                 const statusColor = !d.available ? 'busy' : (d.isGoingHome ? 'going-home' : 'available');
-                const homeBadge = d.isGoingHome ? '<br><span class="badge bg-warning text-dark small">🏠 Eve Dönüyor</span>' : '';
+                const homeBadge = d.isGoingHome ? '<br><span class="badge bg-warning text-dark small"> Eve Dönüyor</span>' : '';
 
                 const statusBtn = d.available
                     ? `<button class="btn btn-xs ${d.isGoingHome ? 'btn-info' : 'btn-outline-warning'} mb-1" style="font-size: 0.7rem;" onclick="toggleHomeMode(${d.id}, ${!d.isGoingHome})">${d.isGoingHome ? 'Normal Mod' : 'Paydos Et'}</button>`
@@ -159,7 +159,7 @@
                     color: "#fff", weight: 3, fillOpacity: 0.9
                 }).addTo(map);
 
-                marker.bindPopup(`<b>${d.name}</b><br>${d.isGoingHome ? '🏠 Eve Dönüş Yolunda' : (d.available ? '🟢 Müsait' : '🔴 Meşgul')}`);
+                marker.bindPopup(`<b>${d.name}</b><br>${d.isGoingHome ? ' Eve Dönüş Yolunda' : (d.available ? '🟢 Müsait' : '🔴 Meşgul')}`);
                 driverMarkers.push(marker);
             });
         });
@@ -214,7 +214,7 @@
                       addWaypoints: false, draggableWaypoints: false, show: false
                   }).on('routesfound', function(e) {
                       const summary = e.routes[0].summary;
-                      const isHomeBonus = assignedDriver.isGoingHome ? '<br><small class="text-warning"><b>🏠 Not:</b> Şoförün ev güzergahı olduğu için öncelik verildi.</small>' : '';
+                      const isHomeBonus = assignedDriver.isGoingHome ? '<br><small class="text-warning"><b> Not:</b> Şoförün ev güzergahı olduğu için öncelik verildi.</small>' : '';
 
                       document.getElementById('resultAlert').innerHTML = `
                           <div class="alert alert-success mt-3 shadow-sm border-0">
