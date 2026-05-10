@@ -16,9 +16,7 @@ public class Reservation {
     private Long id;
 
     private String customerName;
-
     private Double pickupLat;
-
     private Double pickupLng;
 
     // --- Turizm İçin Eklenen Alanlar ---
@@ -29,8 +27,8 @@ public class Reservation {
     private ReservationStatus status;
 
     private Long assignedDriverId;
-
     private LocalDateTime createdAt;
+    private Double totalPrice;
 
     // ===================== Constructors =====================
 
@@ -39,8 +37,10 @@ public class Reservation {
         this.status = ReservationStatus.PENDING;
     }
 
+    // GÜNCELLENEN KISIM: 5 Parametreli Constructor (Fiyat hariç)
+    // Çünkü rezervasyon ilk oluşturulduğunda fiyat henüz hesaplanmamıştır.
     public Reservation(String customerName, Double pickupLat, Double pickupLng, Integer passengerCount, String preferredVehicle) {
-        this();
+        this(); // Parametresiz constructor'ı çağırıp createdAt ve status ayarlarını yapar
         this.customerName = customerName;
         this.pickupLat = pickupLat;
         this.pickupLng = pickupLng;
@@ -75,4 +75,7 @@ public class Reservation {
     public void setAssignedDriverId(Long assignedDriverId) { this.assignedDriverId = assignedDriverId; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public Double getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(Double totalPrice) { this.totalPrice = totalPrice; }
 }

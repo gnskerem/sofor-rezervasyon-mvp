@@ -72,4 +72,21 @@ public class ReservationController {
     public ResponseEntity<List<Reservation>> getAllReservations() {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
+
+    @PostMapping("/driver/{id}/home-mode")
+    public ResponseEntity<?> toggleHomeMode(@PathVariable Long id, @RequestParam boolean active) {
+        try {
+            Driver driver = driverRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Şoför bulunamadı"));
+
+            driver.setIsGoingHome(active);
+            driverRepository.save(driver);
+
+            String status = active ? "Eve Dönüş Modu Aktif" : "Normal Mod Aktif";
+            return ResponseEntity.ok("Şoför " + driver.getName() + " için " + status);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Hata: " + e.getMessage());
+        }
+    }
+
 }

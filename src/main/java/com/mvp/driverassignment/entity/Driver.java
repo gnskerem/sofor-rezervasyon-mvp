@@ -2,59 +2,29 @@ package com.mvp.driverassignment.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Şoför entity'si.
- * Turizm odaklı araç tipi ve yolcu kapasitesi alanları eklendi.
- */
 @Entity
 @Table(name = "driver")
 public class Driver {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-
     private Double latitude;
-
     private Double longitude;
-
     private Double rating;
-
-    // true = müsait, false = meşgul veya pasif
     private Boolean available;
-
-    // --- Turizm Sektörü İçin Eklenen Alanlar ---
-
-    /**
-     * Araç Tipi: "Sedan", "VIP Vito", "Minibus"
-     */
     private String vehicleType;
-
-    /**
-     * Maksimum Yolcu Kapasitesi: 4, 7, 16
-     */
     private Integer capacity;
 
-    // ===================== Constructors =====================
+    // --- EVE DÖNÜŞ ALANLARI ---
+    private Double homeLat;
+    private Double homeLng;
+    private Boolean isGoingHome = false;
 
-    public Driver() {}
-
-    // Constructor güncellendi
-    public Driver(String name, Double latitude, Double longitude, Double rating,
-                  Boolean available, String vehicleType, Integer capacity) {
-        this.name = name;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.rating = rating;
-        this.available = available;
-        this.vehicleType = vehicleType;
-        this.capacity = capacity;
+    public Driver() {
     }
 
-    // ===================== Getters & Setters =====================
-
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -119,14 +89,27 @@ public class Driver {
         this.capacity = capacity;
     }
 
-    @Override
-    public String toString() {
-        return "Driver{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", vehicleType='" + vehicleType + '\'' +
-                ", capacity=" + capacity +
-                ", available=" + available +
-                '}';
+    public Double getHomeLat() {
+        return homeLat;
+    }
+
+    public void setHomeLat(Double homeLat) {
+        this.homeLat = homeLat;
+    }
+
+    public Double getHomeLng() {
+        return homeLng;
+    }
+
+    public void setHomeLng(Double homeLng) {
+        this.homeLng = homeLng;
+    }
+
+    public Boolean getIsGoingHome() {
+        return isGoingHome;
+    }
+
+    public void setIsGoingHome(Boolean isGoingHome) {
+        this.isGoingHome = isGoingHome;
     }
 }
