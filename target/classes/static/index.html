@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIP Transfer - Operasyon Kontrol Merkezi</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+  <style>
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    #map { height: 500px; width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 1; }
+    .status-badge { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    .available { background-color: #28a745; box-shadow: 0 0 8px #28a745; }
+    .busy { background-color: #dc3545; box-shadow: 0 0 8px #dc3545; }
+    .going-home { background-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
+    .card { border: none; border-radius: 15px; overflow: hidden; }
+    .table-container { max-height: 480px; overflow-y: auto; }
+    .leaflet-routing-container { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+  <div class="row px-3 mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center bg-primary text-white p-3 rounded-4 shadow">
+      <h2 class="mb-0 ms-2"> VIP Transfer Kontrol Merkezi</h2>
+      <span class="badge bg-light text-primary p-2">Akıllı Rotalama Aktif</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div id="map"></div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3 fw-bold text-primary">📍 Operasyonel Atama Formu</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">MÜŞTERİ ADI</label>
+              <input type="text" id="custName" class="form-control bg-light" placeholder="Örn: Kerem">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-bold">KİŞİ SAYISI</label>
+              <input type="number" id="passengers" class="form-control" value="1" min="1" max="16">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">ARAÇ TİPİ</label>
+              <select id="vehicleType" class="form-select">
+                <option value="Sedan">Sedan (Ekonomik)</option>
+                <option value="VIP Vito">VIP Vito (Konfor)</option>
+                <option value="Minibus">Minibüs (Grup)</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-bold">ALIM NOKTASI</label>
+              <input type="text" id="coords" class="form-control" readonly placeholder="Haritadan seçin">
+              <input type="hidden" id="lat"><input type="hidden" id="lng">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-success w-100 py-2 fw-bold shadow-sm" onclick="makeBooking()">GÖREVİ BAŞLAT</button>
+            </div>
+          </div>
+          <div id="resultAlert"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-dark text-white py-3 fw-bold">📋 Aktif Filo Takibi</div>
+        <div class="card-body p-0 table-container">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light sticky-top">
+            <tr>
+              <th>Şoför / Araç</th>
+              <th>Durum</th>
+              <th>Aksiyon</th>
+            </tr>
+            </thead>
+            <tbody id="driverTable">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<script>
+  let map, customerMarker, routingControl;
+  let driverMarkers = [];
+
+  window.onload = function() {
+      initMap();
+      loadDrivers();
+  };
+
+  function initMap() {
+      map = L.map('map').setView([41.0082, 28.9784], 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+      map.on('click', function(e) {
+          document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+          document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+          document.getElementById('coords').value = e.latlng.lat.toFixed(3) + "," + e.latlng.lng.toFixed(3);
+
+          if (customerMarker) {
+              customerMarker.setLatLng(e.latlng);
+          } else {
+              customerMarker = L.marker(e.latlng, {
+                  icon: L.icon({
+                      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+                      iconSize: [25, 41], iconAnchor: [12, 41]
+                  })
+              }).addTo(map).bindPopup("<b>Yolcu Alım Noktası</b>").openPopup();
+          }
+          if(routingControl) { map.removeControl(routingControl); routingControl = null; }
+      });
+  }
+
+  function loadDrivers() {
+    fetch('/reservations/drivers')
+        .then(res => res.json())
+        .then(data => {
+            const table = document.getElementById('driverTable');
+            table.innerHTML = '';
+            driverMarkers.forEach(m => map.removeLayer(m));
+            driverMarkers = [];
+
+            data.forEach(d => {
+                const statusColor = !d.available ? 'busy' : (d.isGoingHome ? 'going-home' : 'available');
+                const homeBadge = d.isGoingHome ? '<br><span class="badge bg-warning text-dark small"> Eve Dönüyor</span>' : '';
+
+                const statusBtn = d.available
+                    ? `<button class="btn btn-xs ${d.isGoingHome ? 'btn-info' : 'btn-outline-warning'} mb-1" style="font-size: 0.7rem;" onclick="toggleHomeMode(${d.id}, ${!d.isGoingHome})">${d.isGoingHome ? 'Normal Mod' : 'Paydos Et'}</button>`
+                    : `<button class="btn btn-sm btn-danger" onclick="releaseDriver(${d.id})">İŞİ BİTİR</button>`;
+
+                table.innerHTML += `
+                    <tr>
+                        <td>
+                            <b>${d.name}</b> <span class="text-warning small">⭐ ${d.rating}</span>${homeBadge}<br>
+                            <small class="text-muted">${d.vehicleType} (${d.capacity}p)</small>
+                        </td>
+                        <td><span class="status-badge ${statusColor}"></span></td>
+                        <td>${statusBtn}</td>
+                    </tr>
+                `;
+
+                const marker = L.circleMarker([d.latitude, d.longitude], {
+                    radius: 9,
+                    fillColor: d.isGoingHome ? '#ffc107' : (d.available ? '#28a745' : '#dc3545'),
+                    color: "#fff", weight: 3, fillOpacity: 0.9
+                }).addTo(map);
+
+                marker.bindPopup(`<b>${d.name}</b><br>${d.isGoingHome ? ' Eve Dönüş Yolunda' : (d.available ? '🟢 Müsait' : '🔴 Meşgul')}`);
+                driverMarkers.push(marker);
+            });
+        });
+  }
+
+  function toggleHomeMode(id, status) {
+    // URL'nin Controller'daki @PostMapping ile birebir aynı olduğundan emin ol
+    fetch(`/reservations/driver/${id}/home-mode?active=${status}`, { method: 'POST' })
+        .then(res => {
+            if (res.ok) {
+                loadDrivers(); // Tabloyu ve haritayı yeniler
+            } else {
+                alert("Mod değiştirme sırasında bir hata oluştu!");
+            }
+        })
+        .catch(err => console.error("Hata:", err));
+}
+
+  function makeBooking() {
+      const name = document.getElementById('custName').value;
+      const cLat = parseFloat(document.getElementById('lat').value);
+      const cLng = parseFloat(document.getElementById('lng').value);
+      const passengers = document.getElementById('passengers').value;
+      const vehicle = document.getElementById('vehicleType').value;
+
+      if(!name || isNaN(cLat)) { alert("Lütfen haritadan konum seçin!"); return; }
+
+      fetch('/reservations/reservation', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+              customerName: name, pickupLat: cLat, pickupLng: cLng,
+              passengerCount: passengers, preferredVehicle: vehicle
+          })
+      })
+      .then(res => res.json())
+      .then(reservation => {
+          return fetch(`/reservations/assign/${reservation.id}`, { method: 'POST' });
+      })
+      .then(res => {
+          if(!res.ok) return res.text().then(text => { throw new Error(text) });
+          return res.json();
+      })
+      .then(data => {
+          fetch('/reservations/drivers').then(r => r.json()).then(drivers => {
+              const assignedDriver = drivers.find(d => d.id === data.assignedDriverId);
+              if (assignedDriver) {
+                  if (routingControl) map.removeControl(routingControl);
+                  routingControl = L.Routing.control({
+                      waypoints: [L.latLng(assignedDriver.latitude, assignedDriver.longitude), L.latLng(cLat, cLng)],
+                      lineOptions: { styles: [{ color: assignedDriver.isGoingHome ? '#ffc107' : '#007bff', opacity: 0.8, weight: 6 }] },
+                      addWaypoints: false, draggableWaypoints: false, show: false
+                  }).on('routesfound', function(e) {
+                      const summary = e.routes[0].summary;
+                      const isHomeBonus = assignedDriver.isGoingHome ? '<br><small class="text-warning"><b> Not:</b> Şoförün ev güzergahı olduğu için öncelik verildi.</small>' : '';
+
+                      document.getElementById('resultAlert').innerHTML = `
+                          <div class="alert alert-success mt-3 shadow-sm border-0">
+                               <h5 class="alert-heading fw-bold">✅ Atama Başarılı!</h5>
+                               <b>Şoför:</b> ${assignedDriver.name} (${assignedDriver.vehicleType})<br>
+                               <b>Ücret:</b> <span class="fs-5 fw-bold text-success">${data.totalPrice} TL</span><br>
+                               <b>Mesafe:</b> ${(summary.totalDistance / 1000).toFixed(2)} KM
+                               ${isHomeBonus}
+                          </div>
+                      `;
+                  }).addTo(map);
+              }
+              loadDrivers();
+          });
+      })
+      .catch(err => {
+          document.getElementById('resultAlert').innerHTML = `<div class="alert alert-danger mt-3">${err.message}</div>`;
+      });
+  }
+
+  function releaseDriver(driverId) {
+      fetch(`/reservations/driver/${driverId}/release`, { method: 'POST' }).then(() => {
+          if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+          loadDrivers();
+      });
+  }
+</script>
+</body>
+</html>
