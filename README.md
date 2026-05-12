@@ -1,3 +1,4 @@
+<img width="1887" height="905" alt="Ekran görüntüsü 2026-05-12 004555" src="https://github.com/user-attachments/assets/e0acdde4-dbae-4bfb-bf68-1d3d15198641" />
 VIP Transfer & Smart Driver Assignment MVP
 
 Bu proje, VIP transfer operasyonlarını dijitalleştirmek ve şoför verimliliğini artırmak amacıyla geliştirilmiş bir **Akıllı Atama Sistemi**'dir. Sistem, sadece mesafeyi değil, şoförlerin iş-özel hayat dengesini ve maliyet optimizasyonunu (Back-haul) hesaba katar.
