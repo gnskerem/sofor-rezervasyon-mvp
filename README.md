@@ -22,14 +22,14 @@ Bu proje, VIP transfer operasyonlarını dijitalleştirmek ve şoför verimlili�
 ### Akıllı Skorlama Algoritması
 Sistem, bir şoförü atarken şu formülü kullanır:
 - **Normal Mod:** `Skor = (Mesafe * 0.8) - (Rating * 0.2)`
-- **Eve Dönüş Modu:** `Skor = (Eve Yakınlık Mesafesi * 0.4) - (Rating * 0.5)`
+- **Eve Dönüş Modu:** `Skor = (Eve Yakınlık Mesafesi ) * (0.7 *Paydos)`
 *Düşük skor alan şoför, göreve en uygun aday kabul edilir.*
 
 ## Kurulum ve Çalıştırma
 
 1. Projeyi klonlayın ve dizine gidin:
-   git clone [https://github.com/kullanici-adin/driver-assignment-mvp.git](https://github.com/kullanici-adin/driver-assignment-mvp.git)
-   cd driver-assignment-mvp
+   git clone [https://github.com/kullanici-adin/driver-assignment-mvp.git](https://github.com/kullanici-adin/sofor-rezervasyon-mvp.git)
+   cd sofor-rezervasyon-mvp
 
 2. Uygulamayı çalıştırın:
 mvn spring-boot:run
