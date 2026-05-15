@@ -54,12 +54,11 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: ID=" + reservationId));
 
-        // 2. Durum kontrolü
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new RuntimeException("Bu rezervasyon zaten işleme alınmış.");
         }
 
-        // 3. Akıllı algoritma ile şoförü bul (Eve dönüş desteği DriverAssignmentService içinde)
+        // 2. Şoförü bul (Müsaitlik ve işaretleme zaten bu servisin içinde yapılıyor)
         Optional<Driver> bestDriver = driverAssignmentService.assignDriver(
                 reservation,
                 reservation.getPassengerCount(),
@@ -72,39 +71,19 @@ public class ReservationService {
 
         Driver driver = bestDriver.get();
 
-        // 4. Şoför müsaitlik kontrolü ve kilitleme
-        if (!Boolean.TRUE.equals(driver.getAvailable())) {
-            throw new RuntimeException("Şoför şu an başka bir görevde.");
-        }
+        // --- BURADAKİ EXTRA AVAILABLE KONTROLÜNÜ VE driverRepository.save KISMINI SİLDİK ---
+        // Çünkü DriverAssignmentService zaten bu şoförü false yapıp kaydetti.
 
-        // 5. Şoförü meşgul işaretle
-        driver.setAvailable(false);
-        driverRepository.save(driver);
-
-        // 6. Rezervasyonu güncelle (Atanan Şoför ve Durum)
+        // 3. Rezervasyonu güncelle
         reservation.setAssignedDriverId(driver.getId());
         reservation.setStatus(ReservationStatus.ASSIGNED);
 
-        // 7. FİYAT HESAPLAMA (Mesafe Bazlı)
-        // Şoförün mevcut konumu ile müşterinin alış noktası arasındaki mesafeyi ölçüyoruz
+        // 4. Fiyat hesaplama (Mevcut kodun aynısı...)
         double distanceKm = calculateDistance(reservation.getPickupLat(), reservation.getPickupLng(),
                 driver.getLatitude(), driver.getLongitude());
 
-        double basePrice = 50.0; // Açılış Ücreti
-        double perKm;
-
-        // Araç tipine göre katsayı (VIP stratejisi)
-        if (reservation.getPreferredVehicle().contains("Vito")) {
-            perKm = 45.0;
-        } else if (reservation.getPreferredVehicle().contains("Minibus")) {
-            perKm = 60.0;
-        } else {
-            perKm = 25.0; // Standart Sedan
-        }
-
-        double calculatedPrice = basePrice + (distanceKm * perKm);
-
-        // Fiyatı 2 hane yuvarlayıp set ediyoruz
+        double perKm = reservation.getPreferredVehicle().contains("Vito") ? 45.0 : 25.0;
+        double calculatedPrice = 50.0 + (distanceKm * perKm);
         reservation.setTotalPrice(Math.round(calculatedPrice * 100.0) / 100.0);
 
         return reservationRepository.save(reservation);

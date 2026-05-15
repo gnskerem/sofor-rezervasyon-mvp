@@ -4,6 +4,7 @@ import com.mvp.driverassignment.entity.Driver;
 import com.mvp.driverassignment.entity.Reservation;
 import com.mvp.driverassignment.repository.DriverRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Önemli!
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,7 @@ public class DriverAssignmentService {
         this.driverRepository = driverRepository;
     }
 
+    @Transactional // Veritabanı tutarlılığı için ekledik
     public Optional<Driver> assignDriver(Reservation reservation, Integer passengerCount, String preferredVehicle) {
         List<Driver> availableDrivers = driverRepository.findByAvailableTrue();
 
@@ -31,18 +33,13 @@ public class DriverAssignmentService {
 
             // --- EVE DÖNÜŞ OPTİMİZASYONU ---
             if (Boolean.TRUE.equals(driver.getIsGoingHome()) && driver.getHomeLat() != null) {
-                // Müşterinin alış noktası şoförün evine ne kadar yakın?
                 double distToHome = calculateDistance(
                         reservation.getPickupLat(), reservation.getPickupLng(),
                         driver.getHomeLat(), driver.getHomeLng()
                 );
-
-                // Çok düşük bir katsayı (0.2) vererek bu şoförü listenin başına çekiyoruz.
-                // Çünkü şoför zaten o yöne (evine) gidiyor!
+                // Evine yakın bir işse skoru çok düşürüp (0.2) öncelik veriyoruz
                 score = (distToHome * 0.2) - (driver.getRating() * 0.5);
-                System.out.println("DEBUG: " + driver.getName() + " eve dönüyor. Skor: " + score);
             } else {
-                // Standart mesafe skoru
                 double distToPickup = calculateDistance(
                         driver.getLatitude(), driver.getLongitude(),
                         reservation.getPickupLat(), reservation.getPickupLng()
@@ -55,9 +52,17 @@ public class DriverAssignmentService {
                 bestDriver = driver;
             }
         }
+
+        // --- ŞOFÖRÜ MEŞGUL OLARAK İŞARETLE ---
+        if (bestDriver != null) {
+            bestDriver.setAvailable(false); // Şoför artık müsait değil
+            driverRepository.save(bestDriver); // Veritabanında güncelle
+        }
+
         return Optional.ofNullable(bestDriver);
     }
 
+    // Mesafe hesaplama metodu aynı kalıyor...
     public double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
         double R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
