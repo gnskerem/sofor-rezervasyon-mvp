@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rotala Ops Center | Akıllı Filo Yönetimi</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Rotala Operasyon Center | Akıllı Filo Yönetimi</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
 
     <style>
         :root {
@@ -24,22 +24,124 @@
             --paydos-black: #020617;
         }
 
-        body { background-color: var(--bg-main); font-family: 'Inter', sans-serif; color: var(--text-primary); }
-        .navbar-rotala { background-color: var(--bg-card); padding: 1rem 2rem; border-bottom: 1px solid #334155; }
-        .brand { font-weight: 800; font-size: 1.5rem; color: var(--accent); text-decoration: none; }
-        #map { height: 550px; width: 100%; border-radius: 12px; border: 1px solid #334155; filter: grayscale(0.2) invert(0.9) hue-rotate(180deg) brightness(0.9); }
-        .ops-card { background: var(--bg-card); border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
 
-        /* Paydos Butonu - Koyu Füme/Siyah Tasarım */
+        body {
+            background-color: var(--bg-main);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* NAVBAR */
+
+        .navbar-rotala {
+            background-color: var(--bg-card);
+            padding: 16px 32px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        /* MAP */
+
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            overflow: hidden;
+            filter: grayscale(0.2) invert(0.9) hue-rotate(180deg) brightness(0.9);
+        }
+
+        /* CARD */
+
+        .ops-card {
+            background: var(--bg-card);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 20px;
+            height: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .ops-card h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-top: 6px;
+        }
+
+        .ops-card small {
+            letter-spacing: .8px;
+        }
+
+        /* FORM */
+
+        .form-label {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: .9rem;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            height: 48px;
+            border-radius: 10px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #0f172a;
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 0.15rem rgba(56,189,248,.25);
+        }
+
+        .form-control::placeholder{
+            color:#64748b;
+        }
+
+        /* BUTTONS */
+
+        .btn-rotala {
+            background: var(--accent);
+            color: var(--bg-main);
+            font-weight: 800;
+            border: none;
+            height: 48px;
+            border-radius: 10px;
+            transition: .3s ease;
+        }
+
+        .btn-rotala:hover{
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(56,189,248,0.25);
+        }
+
         .btn-paydos {
             background-color: var(--paydos-black);
             color: var(--accent);
             border: 1.5px solid var(--accent);
             font-weight: 700;
             font-size: 0.75rem;
-            padding: 4px 12px;
-            border-radius: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
             transition: all 0.3s ease;
+            min-width: 80px;
         }
 
         .btn-paydos:hover {
@@ -54,197 +156,582 @@
             color: var(--danger);
             border: 1.5px solid var(--danger);
             font-weight: 700;
-            font-size: 0.7rem;
-            padding: 2px 10px;
-            border-radius: 6px;
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            min-width: 80px;
         }
 
-        .status-badge { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .available { background-color: var(--success); }
-        .busy { background-color: var(--danger); }
-        .going-home { background-color: var(--warning); }
+        /* TABLE */
 
-        .table { color: var(--text-primary); }
-        .price-tag { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
-        .home-icon { font-size: 20px; text-align: center; }
-        .leaflet-routing-container { display: none !important; }
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+
+        .table th {
+            border-bottom: 1px solid #334155 !important;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding-bottom: 14px;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 14px 8px;
+        }
+
+        /* STATUS */
+
+        .status-badge {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .available {
+            background-color: var(--success);
+        }
+
+        .busy {
+            background-color: var(--danger);
+        }
+
+        .going-home {
+            background-color: var(--warning);
+        }
+
+        /* ICON */
+
+        .home-icon {
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .leaflet-routing-container {
+            display: none !important;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 992px){
+
+            .navbar-rotala{
+                padding: 14px 18px;
+            }
+
+            .container-fluid{
+                padding: 18px !important;
+            }
+
+            #map{
+                height: 420px;
+            }
+
+            .ops-card{
+                padding: 18px;
+            }
+
+            .ops-card h3{
+                font-size: 1.5rem;
+            }
+        }
+
+        @media(max-width: 768px){
+
+            #map{
+                height: 350px;
+            }
+
+            .brand{
+                font-size: 1.2rem;
+            }
+
+            .table td,
+            .table th{
+                font-size: .8rem;
+            }
+        }
     </style>
 </head>
+
 <body>
 
 <nav class="navbar-rotala d-flex justify-content-between align-items-center">
-    <a href="#" class="brand">ROTALA <span style="color:white">OPS</span></a>
+    <a href="#" class="brand">ROTALA</a>
+
     <div class="d-flex align-items-center gap-3">
-        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">CANLI TAKİP</span>
-        <div class="bg-light rounded-circle" style="width: 35px; height: 35px; line-height: 35px; text-align: center;">👤</div>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+            CANLI TAKİP
+        </span>
+
+        <div class="bg-light rounded-circle"
+             style="width:35px;height:35px;line-height:35px;text-align:center;">
+            👤
+        </div>
     </div>
 </nav>
 
 <div class="container-fluid p-4">
+
+    <!-- TOP STATS -->
+
     <div class="row g-3 mb-4">
-        <div class="col-md-3"><div class="ops-card mb-0"><small class="text-secondary d-block mb-1 text-uppercase">Ciro</small><h3 class="fw-bold mb-0" id="totalRevenue">₺0,00</h3></div></div>
-        <div class="col-md-3"><div class="ops-card mb-0"><small class="text-secondary d-block mb-1 text-uppercase">Bekleyen</small><h3 class="fw-bold mb-0 text-warning" id="pendingCalls">0</h3></div></div>
-        <div class="col-md-3"><div class="ops-card mb-0"><small class="text-secondary d-block mb-1 text-uppercase">Aktif Araç</small><h3 class="fw-bold mb-0 text-info" id="activeDriverCount">0</h3></div></div>
-        <div class="col-md-3"><div class="ops-card mb-0"><small class="text-secondary d-block mb-1 text-uppercase">Tasarruf</small><h3 class="fw-bold mb-0 text-success">142.8 KM</h3></div></div>
+
+        <div class="col-md-3">
+            <div class="ops-card d-flex flex-column justify-content-center mb-0">
+                <small class="text-secondary d-block mb-1 text-uppercase">
+                    Ciro
+                </small>
+
+                <h3 class="fw-bold mb-0" id="totalRevenue">
+                    ₺0,00
+                </h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="ops-card d-flex flex-column justify-content-center mb-0">
+                <small class="text-secondary d-block mb-1 text-uppercase">
+                    Bekleyen
+                </small>
+
+                <h3 class="fw-bold mb-0 text-warning" id="pendingCalls">
+                    0
+                </h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="ops-card d-flex flex-column justify-content-center mb-0">
+                <small class="text-secondary d-block mb-1 text-uppercase">
+                    Aktif Araç
+                </small>
+
+                <h3 class="fw-bold mb-0 text-info" id="activeDriverCount">
+                    0
+                </h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="ops-card d-flex flex-column justify-content-center mb-0">
+                <small class="text-secondary d-block mb-1 text-uppercase">
+                    Tasarruf
+                </small>
+
+                <h3 class="fw-bold mb-0 text-success">
+                    142.8 KM
+                </h3>
+            </div>
+        </div>
+
     </div>
 
+    <!-- MAIN -->
+
     <div class="row">
+
+        <!-- LEFT -->
+
         <div class="col-lg-8">
+
             <div id="map" class="mb-4"></div>
+
             <div class="ops-card">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0 fw-bold">Atama Paneli</h6>
-                    <small class="text-secondary" id="selectedCoords">Haritadan konum seçin</small>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="mb-0 fw-bold">
+                        Atama Paneli
+                    </h6>
+
+                    <small class="text-secondary" id="selectedCoords">
+                        Haritadan konum seçin
+                    </small>
                 </div>
+
                 <div class="row g-3">
-                    <div class="col-md-4"><label class="form-label">Müşteri</label><input type="text" id="custName" class="form-control" placeholder="Ad Soyad"></div>
-                    <div class="col-md-4"><label class="form-label">Araç Sınıfı</label><select id="vehicleType" class="form-select"><option value="Sedan">Eco (Sedan)</option><option value="VIP Vito">Konfor (Vito)</option></select></div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button class="btn w-100" style="background: var(--accent); color: var(--bg-main); font-weight:800; border:none; padding:12px; border-radius:8px;" onclick="makeBooking()">ROTALA</button>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Müşteri</label>
+
+                        <input
+                                type="text"
+                                id="custName"
+                                class="form-control"
+                                placeholder="Ad Soyad"
+                        >
                     </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Araç Sınıfı</label>
+
+                        <select id="vehicleType" class="form-select">
+                            <option value="Sedan">
+                                Eco (Sedan)
+                            </option>
+
+                            <option value="VIP Vito">
+                                Konfor (Vito)
+                            </option>
+
+                            <option value="Minibüs">
+                                Minibüs
+                            </option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 d-grid">
+                        <label class="form-label opacity-0">Buton</label>
+
+                        <button class="btn btn-rotala" onclick="makeBooking()">
+                            ROTALA
+                        </button>
+                    </div>
+
                 </div>
-                <input type="hidden" id="lat"><input type="hidden" id="lng"><input type="hidden" id="passengers" value="1">
+
+                <input type="hidden" id="lat">
+                <input type="hidden" id="lng">
+                <input type="hidden" id="passengers" value="1">
+
                 <div id="resultAlert"></div>
+
             </div>
         </div>
 
+        <!-- RIGHT -->
+
         <div class="col-lg-4">
+
             <div class="ops-card h-100">
-                <h6 class="fw-bold mb-3 border-bottom border-secondary pb-2">Canlı Filo Takibi</h6>
+
+                <h6 class="fw-bold mb-3 border-bottom border-secondary pb-2">
+                    Canlı Filo Takibi
+                </h6>
+
                 <div class="table-responsive">
+
                     <table class="table table-hover align-middle">
-                        <thead><tr><th>Şoför</th><th>Durum</th><th class="text-end">İşlem</th></tr></thead>
+
+                        <thead>
+                        <tr>
+                            <th>Şoför</th>
+                            <th>Durum</th>
+                            <th class="text-end" style="width:120px">
+                                İşlem
+                            </th>
+                        </tr>
+                        </thead>
+
                         <tbody id="driverTable"></tbody>
+
                     </table>
+
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
-    let map, customerMarker, routingControl;
+
+    let map,
+        customerMarker,
+        routingControl;
+
     let driverLayers = L.layerGroup();
+
     let driversData = [];
+
     let totalRevenue = 0;
 
-    const homeIcon = L.divIcon({ html: '🏠', className: 'home-icon', iconSize: [25, 25], iconAnchor: [12, 12] });
+    const homeIcon = L.divIcon({
+        html: '🏠',
+        className: 'home-icon',
+        iconSize: [25, 25],
+        iconAnchor: [12, 12]
+    });
 
-    window.onload = function() { initMap(); loadDrivers(); };
+    window.onload = function () {
+        initMap();
+        loadDrivers();
+    };
 
     function initMap() {
-        map = L.map('map', { zoomControl: false }).setView([41.0082, 28.9784], 11);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        map = L.map('map', {
+            zoomControl: false
+        }).setView([41.0082, 28.9784], 11);
+
+        L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+        ).addTo(map);
+
         driverLayers.addTo(map);
 
-        map.on('click', function(e) {
+        map.on('click', function (e) {
+
             document.getElementById('lat').value = e.latlng.lat;
             document.getElementById('lng').value = e.latlng.lng;
-            document.getElementById('selectedCoords').innerText = `Konum: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
-            if (customerMarker) customerMarker.setLatLng(e.latlng);
-            else customerMarker = L.marker(e.latlng).addTo(map);
+
+            document.getElementById('selectedCoords').innerText =
+                `Konum: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+
+            if (customerMarker) {
+                customerMarker.setLatLng(e.latlng);
+            } else {
+                customerMarker = L.marker(e.latlng).addTo(map);
+            }
         });
     }
 
     function loadDrivers() {
-      fetch('/reservations/drivers')
-          .then(res => res.json())
-          .then(data => {
-              driversData = data;
-              const table = document.getElementById('driverTable');
-              table.innerHTML = '';
-              driverLayers.clearLayers();
 
-              let paydostaBekleyenler = 0;
+        fetch('/reservations/drivers')
 
-              data.forEach(d => {
-                  const isHome = d.isGoingHome;
-                  const statusClass = !d.available ? 'busy' : (isHome ? 'going-home' : 'available');
-                  const durum = !d.available ? 'Görevde' : (isHome ? 'Paydosta' : 'Müsait');
+            .then(res => res.json())
 
-                  // Eğer şoför hem müsait hem de paydostaysa havuzdaki bekleyen sayısını artır
-                  if (d.available && isHome) {
-                      paydostaBekleyenler++;
-                  }
+            .then(data => {
 
-                  const actionBtn = d.available
-                      ? `<button class="btn-paydos" onclick="toggleHomeMode(${d.id}, ${!isHome})">${isHome ? 'İptal' : 'Paydos'}</button>`
-                      : `<button class="btn-bitir" onclick="releaseDriver(${d.id})">Bitir</button>`;
+                driversData = data;
 
-                  table.innerHTML += `
-                      <tr style="border-bottom: 1px solid #334155">
-                          <td class="py-3"><b>${d.name}</b><br><small class="text-secondary">${d.vehicleType}</small></td>
-                          <td><span class="status-badge ${statusClass}"></span><small>${durum}</small></td>
-                          <td class="text-end">${actionBtn}</td>
-                      </tr>`;
+                const table = document.getElementById('driverTable');
 
-                  L.circleMarker([d.latitude, d.longitude], {
-                      radius: 8, fillColor: isHome ? '#fbbf24' : (d.available ? '#22c55e' : '#ef4444'),
-                      color: "#fff", weight: 2, fillOpacity: 1
-                  }).addTo(driverLayers);
+                table.innerHTML = '';
 
-                  if (d.homeLat && d.homeLng) {
-                      L.marker([d.homeLat, d.homeLng], { icon: homeIcon }).addTo(driverLayers);
-                      if(isHome) {
-                          L.polyline([[d.latitude, d.longitude], [d.homeLat, d.homeLng]], {
-                              color: '#fbbf24', weight: 2, dashArray: '5, 10', opacity: 0.6
-                          }).addTo(driverLayers);
-                      }
-                  }
-              });
+                driverLayers.clearLayers();
 
-              // Aktif şoförleri ve reaktif havuz sayacını ekrana basıyoruz
-              document.getElementById('activeDriverCount').innerText = data.filter(d => d.available).length;
-              document.getElementById('pendingCalls').innerText = paydostaBekleyenler;
-          });
+                let paydostaBekleyenler = 0;
+
+                data.forEach(d => {
+
+                    const isHome = d.isGoingHome;
+
+                    const statusClass =
+                        !d.available
+                            ? 'busy'
+                            : (isHome ? 'going-home' : 'available');
+
+                    const durum =
+                        !d.available
+                            ? 'Görevde'
+                            : (isHome ? 'Paydosta' : 'Müsait');
+
+                    if (d.available && isHome) {
+                        paydostaBekleyenler++;
+                    }
+
+                    const actionBtn = d.available
+
+                        ? `<button class="btn-paydos"
+                            onclick="toggleHomeMode(${d.id}, ${!isHome})">
+                            ${isHome ? 'İptal' : 'Paydos'}
+                           </button>`
+
+                        : `<button class="btn-bitir"
+                            onclick="releaseDriver(${d.id})">
+                            Bitir
+                           </button>`;
+
+                    table.innerHTML += `
+
+                        <tr class="align-middle"
+                            style="border-bottom:1px solid #334155">
+
+                            <td class="py-3">
+
+                                <b>${d.name}</b><br>
+
+                                <small class="text-secondary">
+                                    ${d.vehicleType}
+                                </small>
+
+                            </td>
+
+                            <td>
+
+                                <span class="status-badge ${statusClass}"></span>
+
+                                <small>${durum}</small>
+
+                            </td>
+
+                            <td class="text-end">
+                                ${actionBtn}
+                            </td>
+
+                        </tr>
+                    `;
+
+                    L.circleMarker([d.latitude, d.longitude], {
+                        radius: 8,
+                        fillColor: isHome
+                            ? '#fbbf24'
+                            : (d.available ? '#22c55e' : '#ef4444'),
+                        color: "#fff",
+                        weight: 2,
+                        fillOpacity: 1
+
+                    }).addTo(driverLayers);
+
+                    if (d.homeLat && d.homeLng) {
+
+                        L.marker(
+                            [d.homeLat, d.homeLng],
+                            { icon: homeIcon }
+                        ).addTo(driverLayers);
+
+                        if (isHome) {
+
+                            L.polyline(
+                                [
+                                    [d.latitude, d.longitude],
+                                    [d.homeLat, d.homeLng]
+                                ],
+                                {
+                                    color: '#fbbf24',
+                                    weight: 2,
+                                    dashArray: '5, 10',
+                                    opacity: 0.6
+                                }
+                            ).addTo(driverLayers);
+                        }
+                    }
+                });
+
+                document.getElementById('activeDriverCount').innerText =
+                    data.filter(d => d.available).length;
+
+                document.getElementById('pendingCalls').innerText =
+                    paydostaBekleyenler;
+            });
     }
 
     function makeBooking() {
-        const name = document.getElementById('custName').value;
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lng = parseFloat(document.getElementById('lng').value);
-        if(!name || isNaN(lat)) { alert("Konum seçiniz!"); return; }
+
+        const name =
+            document.getElementById('custName').value;
+
+        const lat =
+            parseFloat(document.getElementById('lat').value);
+
+        const lng =
+            parseFloat(document.getElementById('lng').value);
+
+        if (!name || isNaN(lat)) {
+            alert("Konum seçiniz!");
+            return;
+        }
 
         fetch('/reservations/reservation', {
+
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customerName: name, pickupLat: lat, pickupLng: lng, passengerCount: 1, preferredVehicle: document.getElementById('vehicleType').value })
+
+            headers: {
+                'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+                customerName: name,
+                pickupLat: lat,
+                pickupLng: lng,
+                passengerCount: 1,
+                preferredVehicle:
+                    document.getElementById('vehicleType').value
+            })
+
         })
-        .then(res => res.json())
-        .then(resv => fetch(`/reservations/assign/${resv.id}`, { method: 'POST' }))
-        .then(res => res.json())
-        .then(data => {
-            const driver = driversData.find(d => d.id == data.assignedDriverId);
-            totalRevenue += data.totalPrice;
-            document.getElementById('totalRevenue').innerText = `₺${totalRevenue.toLocaleString('tr-TR')}`;
 
-            document.getElementById('resultAlert').innerHTML = `<div class="alert alert-info mt-3 bg-opacity-10 border-0 text-info"><b>✓ ${driver.name} Atandı</b> | Fiyat: ₺${data.totalPrice}</div>`;
+            .then(res => res.json())
 
-            if(routingControl) map.removeControl(routingControl);
-            routingControl = L.Routing.control({
-                waypoints: [L.latLng(driver.latitude, driver.longitude), L.latLng(lat, lng)],
-                lineOptions: { styles: [{ color: '#38bdf8', weight: 5 }] },
-                createMarker: function() { return null; }
-            }).addTo(map);
+            .then(resv =>
+                fetch(`/reservations/assign/${resv.id}`, {
+                    method: 'POST'
+                })
+            )
 
-            // Atama bitince loadDrivers tetiklenir, görev alan şoför havuzdan ve dolayısıyla sayaçtan otomatik düşer
-            loadDrivers();
-        });
+            .then(res => res.json())
+
+            .then(data => {
+
+                const driver =
+                    driversData.find(
+                        d => d.id == data.assignedDriverId
+                    );
+
+                totalRevenue += data.totalPrice;
+
+                document.getElementById('totalRevenue').innerText =
+                    `₺${totalRevenue.toLocaleString('tr-TR')}`;
+
+                document.getElementById('resultAlert').innerHTML = `
+                    <div class="alert alert-info mt-3 bg-opacity-10 border-0 text-info">
+                        <b>✓ ${driver.name} Atandı</b>
+                        | Fiyat: ₺${data.totalPrice}
+                    </div>
+                `;
+
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
+
+                routingControl = L.Routing.control({
+
+                    waypoints: [
+                        L.latLng(driver.latitude, driver.longitude),
+                        L.latLng(lat, lng)
+                    ],
+
+                    lineOptions: {
+                        styles: [{
+                            color: '#38bdf8',
+                            weight: 5
+                        }]
+                    },
+
+                    createMarker: function () {
+                        return null;
+                    }
+
+                }).addTo(map);
+
+                loadDrivers();
+            });
     }
 
     function toggleHomeMode(id, status) {
-        fetch(`/reservations/driver/${id}/home-mode?active=${status}`, { method: 'POST' }).then(() => loadDrivers());
+
+        fetch(
+            `/reservations/driver/${id}/home-mode?active=${status}`,
+            { method: 'POST' }
+        ).then(() => loadDrivers());
     }
 
     function releaseDriver(id) {
-        fetch(`/reservations/driver/${id}/release`, { method: 'POST' }).then(() => {
-            if(routingControl) map.removeControl(routingControl);
+
+        fetch(
+            `/reservations/driver/${id}/release`,
+            { method: 'POST' }
+        ).then(() => {
+
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+
             loadDrivers();
         });
     }
+
 </script>
+
 </body>
 </html>
